@@ -1,4 +1,8 @@
 ## Ideas for VGP analysis
+- stain VGP cFOS ensure brains for marker for Vgat subpopulation? 
+- Flavor conditioning, signal change over sessions? 
+- What happens if we switch the flavors?
+
 
 # 2P data
 - Align signal to first lick after pump on
@@ -9,6 +13,8 @@
 
 
 # Behavior 
-cumulative licks (session)
+- cumulative licks (session)
+- latencty per session flavor conditioning 
+- Total licks per session (flavor conditioning )
 
 
