@@ -78,8 +78,36 @@ def get_first_lick(licks_per_trial):
 
     return first_licks
 
+def get_ncells_overlap(cond1, cond2):
+    
+    n_both = sum(np.logical_and(cond1, cond2))
+    n_neither = sum(~np.logical_or(cond1, cond2))
+    n_cond1 = int(sum(cond1) - n_both)
+    n_cond2 = int(sum(cond2) - n_both)
 
-def assemble_data(s2p_folder,events_file):
+    return (n_cond1, n_cond2, n_both, n_neither)
+
+def make_responsive_df(pump_responsive, lick_responsive):
+    pump_r = abs(pump_responsive)
+    lick_r = abs(lick_responsive)
+
+    # activated cells
+    pump_a = pump_responsive == 1
+    lick_a = lick_responsive == 1
+
+    # inhibited cells
+    pump_i = pump_responsive == -1
+    lick_i = lick_responsive == -1
+
+    return pd.DataFrame([get_ncells_overlap(pump_r, lick_r),
+                    get_ncells_overlap(pump_a, lick_a),
+                    get_ncells_overlap(pump_i, lick_i)],
+                    columns=["pump", "lick", "both", "neither"],
+                    index=["responsive", "activated", "inhibited"]).T
+
+def assemble_data(s2p_folder,events_file,
+                  animal="unnamed", diet="ns", solution="ns",
+                  baseline_frames=50, total_frames=150):
 
     raw_F, neu_F, iscell, s2p_length = load_s2p_data(s2p_folder)
     
@@ -95,7 +123,7 @@ def assemble_data(s2p_folder,events_file):
     for i, cell in enumerate(cell_idx):
         delta_f = process_cell(cell, raw_F, neu_F)
 
-        pump_snips = get_snips(delta_f, pump_frames)
+        pump_snips = get_snips(delta_f, pump_frames, baseline_frames=baseline_frames, total_frames=total_frames)
         r, p = get_responsive(pump_snips)
 
         if (p < 0.05) & (r < 0):
@@ -103,10 +131,10 @@ def assemble_data(s2p_folder,events_file):
         elif (p < 0.05) & (r > 0):
             pump_responsive[i] = -1
 
-        licks_per_trial = get_licks_per_trial(pump_frames, licks_frames)
+        licks_per_trial = get_licks_per_trial(pump_frames, licks_frames, trial_end=total_frames-baseline_frames)
         first_lick_frames = get_first_lick(licks_per_trial)
 
-        lick_snips = get_snips(delta_f, first_lick_frames)
+        lick_snips = get_snips(delta_f, first_lick_frames, baseline_frames=baseline_frames, total_frames=total_frames)
         r, p = get_responsive(lick_snips)
 
         if (p < 0.05) & (r < 0):
@@ -117,13 +145,19 @@ def assemble_data(s2p_folder,events_file):
         pump_snips_all.append(pump_snips)
         lick_snips_all.append(lick_snips)
 
-    return {"raw_F": raw_F,
+    df_responsive = make_responsive_df(pump_responsive, lick_responsive)
+
+    return {"animal": animal,
+            "diet": diet,
+            "solution": solution,
+            "raw_F": raw_F,
             "neu_F": neu_F,
             "iscell": iscell,
             "pump_snips_all": np.array(pump_snips_all),
             "pump_responsive": pump_responsive,
             "lick_snips_all": np.array(lick_snips_all),
-            "lick_responsive": lick_responsive
+            "lick_responsive": lick_responsive,
+            "df_responsive": df_responsive
             }
 
         
