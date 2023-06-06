@@ -84,8 +84,10 @@ def get_ncells_overlap(cond1, cond2):
     n_neither = sum(~np.logical_or(cond1, cond2))
     n_cond1 = int(sum(cond1) - n_both)
     n_cond2 = int(sum(cond2) - n_both)
+    
+#     print(n_cond1, n_cond2, n_both, n_neither)
 
-    return (n_cond1, n_cond2, n_both, n_neither)
+    return (int(sum(cond1)), int(sum(cond2)), n_cond1, n_cond2, n_both, n_neither)
 
 def make_responsive_df(pump_responsive, lick_responsive):
     pump_r = abs(pump_responsive)
@@ -98,11 +100,15 @@ def make_responsive_df(pump_responsive, lick_responsive):
     # inhibited cells
     pump_i = pump_responsive == -1
     lick_i = lick_responsive == -1
+#     print(pump_r)
+#     print(pump_a)
+#     print(pump_i)
 
-    return pd.DataFrame([get_ncells_overlap(pump_r, lick_r),
+    return pd.DataFrame([
+                    get_ncells_overlap(pump_r, lick_r),
                     get_ncells_overlap(pump_a, lick_a),
                     get_ncells_overlap(pump_i, lick_i)],
-                    columns=["pump", "lick", "both", "neither"],
+                    columns=['pump_all','lick_all',"pump_only", "lick_only", "both", "neither"],
                     index=["responsive", "activated", "inhibited"]).T
 
 def assemble_data(s2p_folder,events_file,
