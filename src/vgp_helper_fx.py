@@ -31,9 +31,16 @@ def get_frames(events_file,s2p_length):
     
     return pump_frames, licks_frames
 
-def process_cell(cell_idx, raw_F, neu_F, filter=True):
+def process_cell(cell_idx, raw_F, neu_F, filter=True, normalization_method="vijay"):
     x = raw_F[cell_idx, :] - 0.7*(neu_F[cell_idx, :])
-    x = (x - np.mean(x))/np.std(x)
+    
+    if normalization_method == "zscore":
+        x = (x - np.mean(x))/np.std(x)
+    elif normalization_method == "vijay":
+        x = (x - np.median(x)) / (np.max(x) - np.min(x))
+    else:
+        print(f"{normalization_method} is not a valid normalization method")
+        
     if filter:
         x = filter_cell(x, rolling_average=True)
     return x
