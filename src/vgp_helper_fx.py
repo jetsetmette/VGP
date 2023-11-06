@@ -31,17 +31,23 @@ def get_frames(events_file,s2p_length):
     
     return pump_frames, licks_frames
 
-def process_cell(cell_idx, raw_F, neu_F, filter=False):
+def process_cell(cell_idx, raw_F, neu_F, filter=True):
     x = raw_F[cell_idx, :] - 0.7*(neu_F[cell_idx, :])
     x = (x - np.mean(x))/np.std(x)
     if filter:
-        x = filter_cell(x)
+        x = filter_cell(x, rolling_average=True)
     return x
 
-def filter_cell(x):
-    t = np.arange(0,len(x)/10,0.1)
-    filt = signal.butter(4, 1, 'low', fs=10, output='sos')
-    filtered = signal.sosfilt(filt, x)
+def filter_cell(x, rolling_average=True):
+    if rolling_average:
+        window_size = 3
+
+        # Calculate the rolling average
+        filtered = np.convolve(x, np.ones(window_size) / window_size, mode='valid')
+    else:
+        t = np.arange(0,len(x)/10,0.1)
+        filt = signal.butter(4, 1, 'low', fs=10, output='sos')
+        filtered = signal.sosfilt(filt, x)
     return filtered
 
 def get_snips(f, event_frames, baseline_frames=50, total_frames=150):
@@ -160,7 +166,10 @@ def assemble_data(s2p_folder,events_file,
             "df_responsive": df_responsive
             }
 
-        
+def output_as_tidy_snips(data):
+    
+    df = pd.DataFrame()
+    
 
         
 
