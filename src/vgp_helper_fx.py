@@ -56,7 +56,7 @@ def get_snips(f, event_frames, baseline_frames=50, total_frames=150):
 
     return np.array(snips)
 
-def get_responsive(snips, range1=range(15,50), range2=range(50,85)):
+def get_responsive(snips, range1=range(30,50), range2=range(50,70)):
     pre = np.mean(snips[:, range1], axis=0)
     post = np.mean(snips[:, range2], axis=0)
     
