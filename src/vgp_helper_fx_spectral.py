@@ -78,10 +78,33 @@ def get_licks_per_trial(pump_frames, licks_frames, trial_end=100):
         temp=[]
         for l in licks_frames: 
             if l > p and l < p + trial_end: 
-                temp.append(l)                
+                temp.append(l) 
         licks_per_trial.append(temp)
 
     return licks_per_trial
+
+def get_empty_licks(pump_frames, licks_frames, trial_end=200): 
+    empty_licks=[]
+    for p in pump_frames: 
+        temp=[]
+        temp_lick=[]
+        for l in licks_frames: 
+            if l > p and l < (p + 100):
+                temp_lick.append(l)
+            if len (temp_lick)>0: 
+                if l > (p+100) and l < (p+trial_end):
+                    temp.append(l)
+                    
+        empty_licks.append(temp)
+    empty_lick_frame=[]    
+    for trial in empty_licks: 
+        if len(trial)> 0: 
+            empty_lick_frame.append(trial[0])
+        
+    return empty_lick_frame
+            
+                
+
 
 def get_first_lick(licks_per_trial):
     
@@ -137,6 +160,7 @@ def assemble_data(s2p_folder,events_file,
 
     pump_snips_all = []
     lick_snips_all = []
+    empty_lick_snips_all = [] # snips off 'empty licks'
     pump_responsive = np.zeros(len(cell_idx))
     lick_responsive = np.zeros(len(cell_idx))
 
@@ -155,6 +179,11 @@ def assemble_data(s2p_folder,events_file,
         first_lick_frames = get_first_lick(licks_per_trial)
 
         lick_snips = get_snips(delta_f, first_lick_frames, baseline_frames=baseline_frames, total_frames=total_frames)
+        
+        empty_lick_frame= get_empty_licks(pump_frames, licks_frames, trial_end=200)
+        empty_snips = get_snips(delta_f, empty_lick_frame, baseline_frames=baseline_frames, total_frames=total_frames)
+        
+
         r, p = get_responsive(lick_snips)
 
         if (p < 0.05) & (r < 0):
@@ -164,6 +193,7 @@ def assemble_data(s2p_folder,events_file,
 
         pump_snips_all.append(pump_snips)
         lick_snips_all.append(lick_snips)
+        empty_lick_snips_all.append(empty_snips)
 
     df_responsive = make_responsive_df(pump_responsive, lick_responsive)
 
@@ -177,6 +207,7 @@ def assemble_data(s2p_folder,events_file,
             "pump_responsive": pump_responsive,
             "lick_snips_all": np.array(lick_snips_all),
             "lick_responsive": lick_responsive,
+            "empty_lick_snips_all": np.array(empty_lick_snips_all),
             "df_responsive": df_responsive
             }
         
